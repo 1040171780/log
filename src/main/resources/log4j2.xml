@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--status属性，这个属性表示log4j2本身的日志信息打印级别。如果把status改为TRACE再执行测试代码，可以看到控制台中打印了一些log4j加载插件、组装logger等调试信息。-->
+<!--monitorInterval属性，含义是每隔300秒重新读取配置文件，可以不重启应用的情况下修改配置，还是很好用的功能。-->
+<configuration status="WARN" monitorInterval="300">
+    <properties>
+        <property name="LOG_HOME">D:/logs</property>
+        <property name="FILE_NAME">mylog</property>
+    </properties>
+    <Appenders>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <!--
+        <File name="MyFile" fileName="D:/logs/log.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        -->
+
+        <!--RollingRandomAccessFile的属性：
+        fileName  指定当前日志文件的位置和文件名称
+        filePattern  指定当发生Rolling时，文件的转移和重命名规则
+        SizeBasedTriggeringPolicy  指定当文件体积大于size指定的值时，触发Rolling
+        DefaultRolloverStrategy  指定最多保存的文件个数
+
+        TimeBasedTriggeringPolicy  这个配置需要和filePattern结合使用，
+        注意filePattern中配置的文件重命名规则是${FILE_NAME}-%d{yyyy-MM-dd HH-mm}-%i，
+        最小的时间粒度是mm，即分钟，TimeBasedTriggeringPolicy指定的size是1，
+        结合起来就是每1分钟生成一个新文件。如果改成%d{yyyy-MM-dd HH}，
+        最小粒度为小时，则每一个小时生成一个文件。-->
+        <RollingRandomAccessFile name="MyFile2"
+            fileName="${LOG_HOME}/${FILE_NAME}.log"
+            filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd HH-mm}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+        </RollingRandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <!--additivity="false"表示在该logger中输出的日志不会再延伸到父层logger。这里如果改为true，则会延伸到Root Logger，遵循Root Logger的配置也输出一次。-->
+        <Logger name="mylog" level="trace" additivity="false">
+            <AppenderRef ref="MyFile2"/><!--写文件-->
+            <!--<AppenderRef ref="Console"/>--><!--控制台输出-->
+        </Logger>
+        <!--日志级别从低到高分为TRACE < DEBUG < INFO < WARN < ERROR < FATAL-->
+        <!--如果level属性值设置为info,则日志级别比info小的（trace,debug都比info小）都不会输出-->
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</configuration>
